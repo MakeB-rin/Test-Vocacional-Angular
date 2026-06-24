@@ -8,6 +8,7 @@ import { TablaSComponent } from "../../../components/tabla-s/tabla-s.component";
 import { TablaIComponent } from "../../../components/tabla-i/tabla-i.component";
 import { TablaDComponent } from "../../../components/tabla-d/tabla-d.component";
 import { TablaEComponent } from "../../../components/tabla-e/tabla-e.component";
+import { Facultad } from '../../../services/facultad.service';
 import jsPDF from 'jspdf';
 
 @Component({
@@ -66,7 +67,7 @@ export class ResultFormComponent {
   descripcionT: string = '';
   ramaChaside: string = '';
   tablaChaside: string='';
-  facultades: any[] = [];
+  facultades: Facultad[] = [];
   constructor(
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -101,7 +102,7 @@ export class ResultFormComponent {
       this.interes = state.interes!;
       this.aptitud = state.aptitud!;
       this.holland = state.holland!;
-      // this.chaside = 'S';
+      //this.chaside = 'S';
       this.chaside = state.chaside!;
       this.celular = state.celular!;
       this.curso = state.curso!;

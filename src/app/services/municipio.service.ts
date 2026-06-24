@@ -42,7 +42,6 @@ export class MunicipioService {
             }
           }
         }
-
         return of(cachedData || MUNICIPIOS_OFFLINE);
       })
     );
@@ -61,7 +60,6 @@ export class MunicipioService {
   getMunicipiosPorProvinciaHttp(idProvincia: number): Observable<Municipio[]> {
     return this.http.get<Municipio[]>(`${this.apiUrl}/provincia/${idProvincia}`).pipe(
       catchError(() => {
-        // Fallback local en caso de error
         const localList = this.getOfflineMunicipios();
         const filtered = localList.filter(m => m.idProvincia === idProvincia);
         return of(filtered);
@@ -83,4 +81,17 @@ export class MunicipioService {
     }
     return cachedData || MUNICIPIOS_OFFLINE;
   }
+
+  create(municipio: Municipio): Observable<Municipio> {
+    return this.http.post<Municipio>(this.apiUrl, municipio);
+  } 
+
+  update(id: number, municipio: Municipio): Observable<Municipio> {
+    return this.http.put<Municipio>(`${this.apiUrl}/${id}`, municipio);
+  } 
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
 }

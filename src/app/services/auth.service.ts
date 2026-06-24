@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
-import { LoginRequest, LoginResponse } from '../interfaces/auth.interface';
+import { LoginRequest, LoginResponse, Usuario, UsuarioRegistrado } from '../interfaces/auth.interface';
 import { environment } from '../../environments/environment';
 import { jwtDecode as jwt_decode } from 'jwt-decode';
 import { NotificacionService } from './notificacion.service';
@@ -40,7 +40,8 @@ export class AuthService {
             localStorage.setItem(this.CLAVE_TOKEN, respuesta.token);
             localStorage.setItem(this.DATOS_USUARIO, JSON.stringify({
               username: respuesta.username,
-              nombre: respuesta.nombre
+              nombre: respuesta.nombre,
+              rol: respuesta.rol
             }));
           }
           this.estadoAutenticacion.next(true);
@@ -70,7 +71,7 @@ export class AuthService {
     if (!token) return false;
 
     try {
-      const tokenDecodificado: any = jwt_decode(token);
+      const tokenDecodificado = jwt_decode<{ exp: number }>(token);
       const ahora = Math.floor(Date.now() / 1000);
       const tokenValido = tokenDecodificado.exp > ahora;
       if (!tokenValido) {
@@ -96,7 +97,7 @@ export class AuthService {
     return this.esNavegador ? localStorage.getItem(this.CLAVE_TOKEN) : null;
   }
 
-  obtenerDatosUsuario(): any {
+  obtenerDatosUsuario(): Usuario | null {
     if (!this.esNavegador) return null;
     const datosUsuario = localStorage.getItem(this.DATOS_USUARIO);
     return datosUsuario ? JSON.parse(datosUsuario) : null;
@@ -114,4 +115,48 @@ export class AuthService {
     const estaAutenticado = this.estaAutenticado();
     this.estadoAutenticacion.next(estaAutenticado);
   }
+
+  obtenerRol(): string | null {
+    const token = this.obtenerToken();
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const payload: any = jwt_decode(token);
+
+      return payload.roles?.[0] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  esAdministrador(): boolean {
+    return this.obtenerRol() === 'ROLE_ADMINISTRADOR' || this.obtenerRol() === 'ADMINISTRADOR';
+  }
+
+  esEvaluador(): boolean {
+    return this.obtenerRol() === 'ROLE_EVALUADOR' || this.obtenerRol() === 'EVALUADOR';
+  }
+
+  getUsuarios(): Observable<UsuarioRegistrado[]> {
+    return this.http.get<UsuarioRegistrado[]>(`${this.urlApi}/users`);
+  }
+
+  getById(id: number): Observable<UsuarioRegistrado> {
+    return this.http.get<UsuarioRegistrado>(`${this.urlApi}/users/${id}`);
+  }
+
+  create(usuarioRegistrado: UsuarioRegistrado): Observable<UsuarioRegistrado> {
+    return this.http.post<UsuarioRegistrado>(`${this.urlApi}/register`, usuarioRegistrado);
+  }
+
+  update(id: number, usuarioRegistrado: UsuarioRegistrado): Observable<UsuarioRegistrado>{
+    return this.http.put<UsuarioRegistrado>(`${this.urlApi}/update/${id}`, usuarioRegistrado);
+  }
+
+  delete(id: number): Observable<void>{
+    return this.http.delete<void>(`${this.urlApi}/delete/${id}`);
+  }
+
 }
